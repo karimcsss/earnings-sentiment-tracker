@@ -28,7 +28,7 @@ def recuperer_transcription(ticker: str, trimestre: str) -> Transcription | None
     reponse = requests.get(URL_BASE, params=params)
     reponse.raise_for_status()
     donnees = reponse.json()
-
+    
     if "transcript" not in donnees or not donnees["transcript"]:
         print(f"Aucune transcription trouvée pour {ticker} {trimestre}")
         return None
