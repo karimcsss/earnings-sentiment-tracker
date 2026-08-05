@@ -1,0 +1,4 @@
+ticker,trimestre,score_sentiment,rendement_j1,rendement_j5
+MSFT,2025Q1,0.8,7.63,10.35
+MSFT,2025Q2,0.8,3.95,4.36
+MSFT,2025Q3,0.8,-2.92,-4.53

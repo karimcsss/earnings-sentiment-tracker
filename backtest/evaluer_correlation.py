@@ -6,7 +6,9 @@ from models.schema import AnalyseSentiment, ResultatBacktest
 from collecte.recuperer_dates_earnings import recuperer_dates_earnings
 
 
-def calculer_rendements(ticker: str, date_publication: str) -> tuple[float, float]:
+import time
+
+def calculer_rendements(ticker: str, date_publication: str, max_tentatives: int = 3) -> tuple[float, float]:
     """
     Calcule le rendement (%) à J+1 et J+5 après la date de publication des résultats.
     """
@@ -14,12 +16,20 @@ def calculer_rendements(ticker: str, date_publication: str) -> tuple[float, floa
     debut = date_pub - timedelta(days=3)
     fin = date_pub + timedelta(days=10)
 
-    historique = yf.download(ticker, start=debut, end=fin, progress=False)
+    historique = None
+    for tentative in range(max_tentatives):
+        historique = yf.Ticker(ticker).history(start=debut, end=fin)
+        if not historique.empty:
+            break
+        print(f"Tentative {tentative + 1}/{max_tentatives} échouée pour {ticker}, nouvel essai...")
+        time.sleep(2)
 
-    if historique.empty:
+    if historique is None or historique.empty:
         raise ValueError(f"Aucune donnée de cours trouvée pour {ticker} autour de {date_publication}")
 
-    # Correction : aplatir les colonnes si yfinance renvoie un MultiIndex
+    # Retirer le fuseau horaire pour pouvoir comparer avec date_pub (naive)
+    historique.index = historique.index.tz_localize(None)
+
     if isinstance(historique.columns, pd.MultiIndex):
         historique.columns = historique.columns.get_level_values(0)
 
