@@ -6,7 +6,7 @@ from collecte.recuperer_transcripts import recuperer_transcription
 from analyse.extraire_sentiment import extraire_sentiment
 from backtest.evaluer_correlation import evaluer_backtest
 
-TICKERS = ["MSFT"]
+TICKERS = ["GOOGL"]
 TRIMESTRES = ["2025Q1", "2025Q2", "2025Q3"]
 
 FICHIER_RESULTATS = Path("data/resultats/backtest_complet.csv")
