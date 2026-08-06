@@ -3,3 +3,6 @@ requests
 python-dotenv
 groq
 yfinance
+scipy
+numpy
+matplotlib
