@@ -10,16 +10,18 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 MODELE = "llama-3.3-70b-versatile"
 
-
-def construire_texte_transcript(transcription: Transcription, max_interventions: int = 30) -> str:
+def construire_texte_transcript(transcription: Transcription, max_interventions: int = 15, max_caracteres_par_intervention: int = 800) -> str:
     """
     Concatène les interventions en texte lisible pour le prompt.
-    On limite le nombre d'interventions pour rester dans un contexte raisonnable
-    et privilégier les remarques préparées (CEO/CFO) en début de call.
+    Limite le nombre d'interventions ET la longueur de chacune pour économiser les tokens Groq,
+    tout en gardant l'essentiel (remarques préparées du CEO/CFO en priorité).
     """
     lignes = []
     for interv in transcription.interventions[:max_interventions]:
-        lignes.append(f"[{interv.role} - {interv.intervenant}]: {interv.texte}")
+        texte_tronque = interv.texte[:max_caracteres_par_intervention]
+        if len(interv.texte) > max_caracteres_par_intervention:
+            texte_tronque += "..."
+        lignes.append(f"[{interv.role} - {interv.intervenant}]: {texte_tronque}")
     return "\n\n".join(lignes)
 
 

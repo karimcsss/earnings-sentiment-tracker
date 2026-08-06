@@ -6,7 +6,7 @@ from collecte.recuperer_transcripts import recuperer_transcription
 from analyse.extraire_sentiment import extraire_sentiment
 from backtest.evaluer_correlation import evaluer_backtest
 
-TICKERS = ["GOOGL"]
+TICKERS = ["AAPL", "MSFT", "GOOGL"]
 TRIMESTRES = ["2025Q1", "2025Q2", "2025Q3"]
 
 FICHIER_RESULTATS = Path("data/resultats/backtest_complet.csv")
@@ -36,16 +36,31 @@ def executer_pipeline():
                 print(f"❌ Erreur sur {ticker} {trimestre} : {e}")
                 continue
 
-            time.sleep(1)  # respecte la limite Alpha Vantage (1 req/seconde max)
+            time.sleep(1)
 
-    # Sauvegarde en CSV pour analyse ultérieure
+    # Charge les résultats existants s'il y en a, pour ne pas les écraser
+    lignes_existantes = []
+    if FICHIER_RESULTATS.exists():
+        with open(FICHIER_RESULTATS, "r", newline="", encoding="utf-8") as f:
+            lignes_existantes = list(csv.DictReader(f))
+
+    cles_existantes = {(l["ticker"], l["trimestre"]) for l in lignes_existantes}
+
+    nouvelles_lignes = [
+        {"ticker": r.ticker, "trimestre": r.trimestre, "score_sentiment": r.score_sentiment,
+         "rendement_j1": r.rendement_j1, "rendement_j5": r.rendement_j5}
+        for r in resultats
+        if (r.ticker, r.trimestre) not in cles_existantes
+    ]
+
+    toutes_les_lignes = lignes_existantes + nouvelles_lignes
+
     with open(FICHIER_RESULTATS, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["ticker", "trimestre", "score_sentiment", "rendement_j1", "rendement_j5"])
-        for r in resultats:
-            writer.writerow([r.ticker, r.trimestre, r.score_sentiment, r.rendement_j1, r.rendement_j5])
+        writer = csv.DictWriter(f, fieldnames=["ticker", "trimestre", "score_sentiment", "rendement_j1", "rendement_j5"])
+        writer.writeheader()
+        writer.writerows(toutes_les_lignes)
 
-    print(f"\n{len(resultats)} résultats sauvegardés dans {FICHIER_RESULTATS}")
+    print(f"\n{len(toutes_les_lignes)} résultats au total dans {FICHIER_RESULTATS}")
     return resultats
 
 
